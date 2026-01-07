@@ -6,8 +6,9 @@ import { Dashboard } from './components/Dashboard';
 import { PredictionResult, SoilData } from './types';
 import { predictCropYield } from './services/geminiService';
 import { AnimatePresence, motion, LayoutGroup } from 'framer-motion';
-import { Leaf, Sparkles, LogIn } from 'lucide-react';
+import { Leaf, LogIn, Hexagon, Sprout } from 'lucide-react';
 import { useAuth, SignIn, UserButton } from './services/authContext';
+import { SoilParticles } from './components/SoilParticles';
 
 export default function App() {
   console.log("App: Rendering");
@@ -15,6 +16,7 @@ export default function App() {
   const [predictionData, setPredictionData] = useState<PredictionResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { isSignedIn, isLoaded } = useAuth();
+
 
   // Redirect to home if accessing protected routes while signed out
   useEffect(() => {
@@ -67,31 +69,43 @@ export default function App() {
   }, [isSignedIn]);
 
   // Initial App Load
-  const [isAppLoading, setIsAppLoading] = useState(true);
+  const [isAppLoading, setIsAppLoading] = useState(() => {
+    // @ts-ignore
+    return !window.agriAppLoaded;
+  });
 
   useEffect(() => {
-    // Wait for the LoadingScreen animation to finish (approx 4s based on LoadingScreen logic)
-    // We can also just listen for a callback, but a timeout is simple for now. 
-    // LoadingScreen has internal progress of ~4s. Let's match it + buffer.
+    if (!isAppLoading) return;
     const timer = setTimeout(() => {
       setIsAppLoading(false);
+      // @ts-ignore
+      window.agriAppLoaded = true;
     }, 4500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [isAppLoading]);
 
   return (
-    <div className="min-h-screen bg-agri-dark text-white overflow-hidden relative selection:bg-agri-green selection:text-white font-sans">
+    <div className="min-h-screen bg-[#050505] text-white overflow-hidden relative selection:bg-agri-green/30 selection:text-white font-sans">
 
-      {/* Dynamic Background */}
+      {/* --- Phase 3: Futuristic Background Layers --- */}
+      <SoilParticles />
+
+      {/* --- Premium Dynamic Background --- */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-agri-green/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-agri-water/10 rounded-full blur-[120px] animate-float" />
-        <div className="absolute inset-0 bg-grid-pattern opacity-[0.1]" />
+        {/* Deep, slowly moving aurora blobs */}
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-agri-green/5 rounded-full blur-[150px] animate-float opacity-40" />
+        <div className="absolute top-[40%] right-[-10%] w-[40%] h-[40%] bg-blue-600/5 rounded-full blur-[150px] animate-float opacity-30" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-[-20%] left-[20%] w-[60%] h-[40%] bg-emerald-900/10 rounded-full blur-[120px] animate-pulse opacity-20" />
+
+        {/* Subtle Grain Overlay is in global CSS */}
+
+        {/* Tech Grid */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-[0.4]" />
       </div>
 
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-agri-dark/70 border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+      <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-5xl px-4">
+        <div className="glass-premium rounded-full px-6 py-3 flex items-center justify-between shadow-2xl shadow-black/50">
 
           {/* Logo */}
           <motion.div
@@ -99,44 +113,43 @@ export default function App() {
             className="flex items-center gap-3 cursor-pointer group shrink-0"
             onClick={() => setView('hero')}
           >
-            <div className="relative">
-              <div className="absolute inset-0 bg-agri-green/20 blur-lg rounded-full group-hover:bg-agri-green/40 transition-all" />
-              <div className="relative p-2 bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-xl group-hover:border-agri-green/30 transition-colors">
-                <Leaf className="w-5 h-5 text-agri-green" />
+            <div className="flex items-center gap-3 group cursor-pointer" onClick={() => setView('hero')}>
+              <div className="relative w-8 h-8 flex items-center justify-center bg-agri-green/10 rounded-md border border-agri-green/20 group-hover:border-agri-green/50 transition-colors">
+                <Sprout className="w-4 h-4 text-agri-green" />
+                <div className="absolute inset-0 bg-agri-green/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <div className="flex flex-col">
+                <h1 className="text-sm font-mono font-bold text-white tracking-[0.25em] uppercase leading-none">
+                  AI<span className="text-agri-green">.</span>CROP<span className="text-agri-green">.</span>YIELD<span className="text-agri-green">.</span>PREDICTION
+                </h1>
               </div>
             </div>
-            <span className="text-xl font-bold font-display tracking-tight text-white group-hover:text-agri-green transition-colors hidden sm:inline-block">
-              AgriVision <span className="text-agri-green">AI</span>
-            </span>
           </motion.div>
 
           {/* Right Side: Navigation */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
 
             {/* Navigation Links */}
             <LayoutGroup>
-              <div className="flex items-center gap-1 p-1 bg-white/5 rounded-full border border-white/5 backdrop-blur-sm overflow-x-auto no-scrollbar">
+              <div className="flex items-center bg-white/5 rounded-full p-1 border border-white/5 backdrop-blur-sm">
                 {['hero', 'form', 'dashboard'].map((tab) => {
-                  // Protected routes
                   if ((tab === 'form' || tab === 'dashboard') && !isSignedIn) return null;
-
-                  // Dashboard visiblity: Only show if data exists or is loading
                   if (tab === 'dashboard' && !predictionData && !isLoading) return null;
 
-                  const labels: Record<string, string> = { hero: 'Home', form: 'Predict', dashboard: 'Results' };
+                  const labels: Record<string, string> = { hero: 'Nexus', form: 'Predict', dashboard: 'Intel' };
                   const isActive = view === tab;
 
                   return (
                     <button
                       key={tab}
                       onClick={() => setView(tab as any)}
-                      className={`relative px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${isActive ? 'text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                      className={`relative px-5 py-1.5 text-xs font-bold tracking-wide transition-colors uppercase ${isActive ? 'text-black' : 'text-slate-400 hover:text-white'}`}
                     >
                       {isActive && (
                         <motion.div
-                          layoutId="nav-bg"
-                          className="absolute inset-0 bg-white/10 rounded-full border border-white/5 shadow-sm"
-                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                          layoutId="nav-pill"
+                          className="absolute inset-0 bg-agri-green rounded-full shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+                          transition={{ type: "spring", bounce: 0.15, duration: 0.6 }}
                         />
                       )}
                       <span className="relative z-10">{labels[tab]}</span>
@@ -147,16 +160,16 @@ export default function App() {
             </LayoutGroup>
 
             {/* Auth Button */}
-            <div className="pl-4 border-l border-white/10">
+            <div className="pl-4 border-l border-white/10 hidden sm:block">
               {isSignedIn ? (
                 <UserButton />
               ) : (
                 <button
                   onClick={() => setView('login')}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-agri-green/10 text-agri-green border border-agri-green/20 hover:bg-agri-green/20 transition-all text-sm font-bold tracking-wide"
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all text-xs font-bold uppercase tracking-wider text-agri-green"
                 >
-                  <LogIn className="w-4 h-4" />
-                  <span>Sign In</span>
+                  <LogIn className="w-3 h-3" />
+                  <span>Access</span>
                 </button>
               )}
             </div>
@@ -165,7 +178,7 @@ export default function App() {
       </nav>
 
       {/* Main Content */}
-      <main className="relative z-10 pt-24 min-h-screen flex flex-col">
+      <main className="relative z-10 pt-32 min-h-screen flex flex-col">
         <AnimatePresence mode="wait">
           {isAppLoading && (
             <LoadingScreen key="loading" />
@@ -174,10 +187,10 @@ export default function App() {
           {!isAppLoading && view === 'hero' && (
             <motion.div
               key="hero"
-              initial={{ opacity: 0, filter: 'blur(10px)' }}
-              animate={{ opacity: 1, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, filter: 'blur(10px)', scale: 0.98 }}
-              transition={{ duration: 0.5 }}
+              initial={{ opacity: 0, filter: 'blur(20px)', scale: 0.95 }}
+              animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
+              exit={{ opacity: 0, filter: 'blur(20px)', scale: 1.05 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
               className="flex-grow flex flex-col"
             >
               <Hero onStart={handleStart} />
@@ -187,10 +200,10 @@ export default function App() {
           {view === 'form' && (
             <motion.div
               key="form"
-              initial={{ opacity: 0, x: 50, filter: 'blur(10px)' }}
-              animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, x: -50, filter: 'blur(10px)' }}
-              transition={{ duration: 0.5, ease: "circOut" }}
+              initial={{ opacity: 0, y: 50, filter: 'blur(10px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: -50, filter: 'blur(10px)' }}
+              transition={{ duration: 0.6, ease: "circOut" }}
               className="flex-grow flex flex-col items-center justify-center p-6"
             >
               <PredictionForm onSubmit={handlePredictionSubmit} isSubmitting={isLoading} />
@@ -200,9 +213,9 @@ export default function App() {
           {view === 'dashboard' && (
             <motion.div
               key="dashboard"
-              initial={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
+              initial={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
               animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, scale: 1.05, filter: 'blur(10px)' }}
+              exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
               transition={{ duration: 0.6, ease: "backOut" }}
               className="flex-grow"
             >
@@ -217,9 +230,9 @@ export default function App() {
           {view === 'login' && (
             <motion.div
               key="login"
-              initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, y: -20, filter: 'blur(10px)' }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
               className="flex-grow flex flex-col items-center justify-center p-6"
             >
@@ -227,24 +240,14 @@ export default function App() {
             </motion.div>
           )}
 
-
         </AnimatePresence>
       </main>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-white/5 bg-agri-dark/50 backdrop-blur-md mt-auto">
-        <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-agri-green animate-pulse" />
-            <span className="text-slate-500 text-xs font-mono uppercase tracking-wider">System Operational</span>
-          </div>
-
-          <div className="flex items-center gap-6">
-            <span className="text-slate-600 hover:text-agri-green transition-colors cursor-pointer text-sm">Privacy</span>
-            <span className="text-slate-600 hover:text-agri-green transition-colors cursor-pointer text-sm">Terms</span>
-
-          </div>
-        </div>
+      {/* Minimal Footer */}
+      <footer className="relative z-10 py-6 text-center">
+        <p className="text-[10px] text-white/20 font-mono uppercase tracking-[0.2em] mix-blend-overlay">
+          AgriVision AI // Planetary Prediction System
+        </p>
       </footer>
     </div>
   );

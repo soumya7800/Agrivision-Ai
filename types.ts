@@ -1,4 +1,3 @@
-
 export interface SoilData {
   country: string;
   nitrogen: number;
@@ -8,7 +7,9 @@ export interface SoilData {
   humidity: number;
   ph: number;
   rainfall: number;
+  pesticides?: number; // Added for User Dataset Model
   cropType?: string;
+  imageBase64?: string;
 }
 
 export interface Recommendation {

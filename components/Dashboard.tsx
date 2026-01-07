@@ -26,6 +26,7 @@ import { TrendingUp, AlertTriangle, CheckCircle, RotateCcw, Droplets, Sprout, Ac
 import { Globe } from './Globe';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { saveTrainingData } from '../services/xgboostService';
 
 
 interface DashboardProps {
@@ -41,23 +42,24 @@ const SkeletonPulse = ({ className }: { className: string }) => (
 );
 
 const SkeletonHologram = () => (
-  <div className="relative h-full min-h-[500px] glass-panel rounded-3xl overflow-hidden flex flex-col items-center justify-center perspective-1000">
-    <div className="absolute inset-0 bg-gradient-to-t from-agri-dark via-transparent to-transparent opacity-80" />
-    <div className="w-32 h-32 rounded-full bg-gradient-to-t from-white/5 to-transparent animate-pulse-glow flex items-center justify-center backdrop-blur-sm border border-white/5">
+  <div className="relative h-full min-h-[500px] glass-panel rounded-3xl overflow-hidden flex flex-col items-center justify-center perspective-1000 border-0 ring-1 ring-white/5">
+    <div className="absolute inset-0 bg-[#050505]/80" />
+    <div className="w-32 h-32 rounded-full bg-white/5 animate-pulse-glow flex items-center justify-center backdrop-blur-md border border-white/10">
       <Loader2 className="w-8 h-8 text-white/20 animate-spin" />
     </div>
+    <p className="mt-8 text-xs font-mono text-slate-500 uppercase tracking-widest animate-pulse">Initializing Neural Core...</p>
   </div>
 );
 
 const SkeletonCard = () => (
-  <div className="glass-card p-6 rounded-3xl flex flex-col justify-between h-40">
+  <div className="glass-card p-6 rounded-3xl flex flex-col justify-between h-40 border-0 bg-white/[0.02]">
     <div className="flex justify-between items-start">
       <SkeletonPulse className="h-4 w-24" />
       <div className="h-8 w-8 rounded-full bg-white/5 animate-pulse" />
     </div>
-    <div className="space-y-2">
+    <div className="space-y-3">
       <SkeletonPulse className="h-8 w-32" />
-      <SkeletonPulse className="h-2 w-full rounded-full" />
+      <SkeletonPulse className="h-2 w-full rounded-full opacity-50" />
     </div>
   </div>
 );
@@ -67,67 +69,71 @@ const SkeletonCard = () => (
 const CropHologram = ({ data }: { data: PredictionResult }) => {
   const isHealthy = data.sustainabilityScore > 70;
   const themeColor = isHealthy ? 'text-agri-green' : 'text-yellow-400';
-  const glowShadow = isHealthy ? '0 0 50px rgba(16,185,129,0.2)' : '0 0 50px rgba(250,204,21,0.2)';
+  const glowShadow = isHealthy ? '0 0 50px rgba(16,185,129,0.3)' : '0 0 50px rgba(250,204,21,0.3)';
 
   return (
-    <div className="relative h-full min-h-[500px] glass-panel rounded-3xl overflow-hidden flex flex-col items-center justify-center group perspective-1000">
+    <div className="relative h-full min-h-[500px] glass-panel rounded-[2.5rem] overflow-hidden flex flex-col items-center justify-center group perspective-1000 border-0 ring-1 ring-white/5 bg-[#050505]/40 backdrop-blur-2xl">
 
       {/* Ambient Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-gradient-to-br from-agri-green/10 to-blue-500/10 rounded-full blur-[100px] opacity-60" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-agri-green/5 rounded-full blur-[120px] opacity-100" />
 
       {/* Grid Floor */}
       <div
-        className="absolute bottom-[-50px] w-[200%] h-[200%] bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] opacity-20"
+        className="absolute bottom-[-100px] w-[200%] h-[200%] bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px] opacity-30"
         style={{ transform: 'rotateX(70deg) translateY(0px)' }}
       />
 
       <div className="relative w-full h-full flex items-center justify-center perspective-1000 z-10">
         <motion.div
-          className="relative w-64 h-64 preserve-3d flex items-center justify-center"
+          className="relative w-72 h-72 preserve-3d flex items-center justify-center"
           animate={{ rotateY: 360 }}
-          transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
         >
           {/* Floating Rings */}
-          <div className={`absolute inset-[-40px] border border-dashed border-white/10 rounded-full opacity-40`} style={{ transform: 'rotateX(75deg)' }} />
+          <div className={`absolute inset-[-40px] border border-dashed border-white/5 rounded-full opacity-60`} style={{ transform: 'rotateX(75deg)' }} />
           <div className={`absolute inset-[-20px] border border-white/5 rounded-full`} style={{ transform: 'rotateX(75deg)' }} />
+          <div className={`absolute inset-[20px] border border-white/5 rounded-full opacity-30 animate-pulse`} style={{ transform: 'rotateX(75deg)' }} />
 
           {/* Core */}
           <motion.div
             className="preserve-3d flex items-center justify-center"
-            animate={{ y: [-10, 10, -10] }}
+            animate={{ y: [-15, 15, -15] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           >
-            {[0, 120, 240].map((deg, i) => (
+            {[0, 60, 120, 180, 240, 300].map((deg, i) => (
               <div
                 key={deg}
-                className={`absolute flex items-center justify-center ${themeColor} drop-shadow-[0_0_10px_rgba(0,0,0,1)]`}
-                style={{ transform: `rotateY(${deg}deg) translateZ(40px)` }}
+                className={`absolute flex items-center justify-center ${themeColor}`}
+                style={{ transform: `rotateY(${deg}deg) translateZ(60px)`, opacity: 0.8 }}
               >
-                <Sprout size={120} strokeWidth={1} className="opacity-90" style={{ filter: `drop-shadow(${glowShadow})` }} />
+                <Sprout size={100} strokeWidth={0.5} className="opacity-90 blur-[1px]" />
               </div>
             ))}
+            <div className={`absolute flex items-center justify-center ${themeColor}`} style={{ transform: 'translateZ(0)' }}>
+              <Sprout size={140} strokeWidth={1} style={{ filter: `drop-shadow(${glowShadow})` }} />
+            </div>
           </motion.div>
         </motion.div>
       </div>
 
-      <div className="absolute top-6 left-6 flex flex-col gap-2 z-20">
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 border border-agri-green/20 text-[10px] text-agri-green font-mono tracking-widest backdrop-blur-md">
-          <Activity className="w-3 h-3" /> LIVE SIMULATION
+      <div className="absolute top-8 left-8 flex flex-col gap-2 z-20">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[9px] text-agri-green font-bold uppercase tracking-widest backdrop-blur-md">
+          <Activity className="w-3 h-3" /> Live Simulation
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 p-8 z-20">
+      <div className="absolute bottom-0 left-0 right-0 p-10 z-20 bg-gradient-to-t from-[#050505] to-transparent">
         <div className="flex justify-between items-end">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className={`flex w-2 h-2 rounded-full ${isHealthy ? 'bg-agri-green' : 'bg-yellow-400'} animate-pulse shadow-[0_0_8px_currentColor]`} />
-              <p className="text-xs text-slate-400 font-bold tracking-[0.2em] uppercase">Target Crop</p>
+            <div className="flex items-center gap-2 mb-3">
+              <span className={`flex w-1.5 h-1.5 rounded-full ${isHealthy ? 'bg-agri-green' : 'bg-yellow-400'} animate-pulse shadow-[0_0_8px_currentColor]`} />
+              <p className="text-[10px] text-slate-400 font-bold tracking-[0.2em] uppercase">Target Biomass</p>
             </div>
-            <h3 className="text-4xl md:text-5xl font-display font-bold text-white tracking-tight leading-none">{data.inputSummary.cropType}</h3>
+            <h3 className="text-5xl font-display font-medium text-white tracking-tighter leading-none">{data.inputSummary.cropType}</h3>
           </div>
           <div className="text-right">
-            <p className="text-xs text-slate-400 mb-1 font-medium tracking-wide">EST. YIELD</p>
-            <p className={`text-3xl font-bold font-mono ${themeColor} drop-shadow-lg`}>{data.yieldPrediction.toFixed(1)} <span className="text-sm text-slate-500">t/ha</span></p>
+            <p className="text-[10px] text-slate-500 mb-1 font-bold tracking-[0.2em] uppercase">Predicted Yield</p>
+            <p className={`text-4xl font-bold font-mono ${themeColor} drop-shadow-lg tracking-tight`}>{data.yieldPrediction.toFixed(1)} <span className="text-sm text-slate-500 font-sans tracking-normal">t/ha</span></p>
           </div>
         </div>
       </div>
@@ -139,27 +145,29 @@ const StatCard = ({ label, value, subtext, icon: Icon, trend, colorClass, delay 
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ delay }}
+    transition={{ delay, duration: 0.5 }}
     className="h-full"
   >
-    <div className={`glass-card p-6 h-full flex flex-col justify-between rounded-3xl relative overflow-hidden group border-l-4 border-l-${colorClass}/50`}>
-      <div className={`absolute -right-10 -top-10 w-32 h-32 bg-${colorClass}/10 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500`} />
+    <div className={`glass-card p-6 h-full flex flex-col justify-between rounded-[1.5rem] relative overflow-hidden group bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all active:scale-[0.98]`}>
 
-      <div className="flex justify-between items-start mb-4 relative z-10">
+      {/* Dynamic Background Gradient */}
+      <div className={`absolute -right-20 -top-20 w-48 h-48 bg-${colorClass}/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700`} />
+
+      <div className="flex justify-between items-start mb-6 relative z-10 hidden-scrollbar">
         <div>
-          <p className="text-slate-400 text-xs font-bold tracking-wider uppercase mb-1">{label}</p>
-          <h3 className="text-3xl font-display font-bold text-white tracking-tight">{value}</h3>
+          <p className="text-slate-500 text-[10px] font-bold tracking-[0.2em] uppercase mb-2">{label}</p>
+          <h3 className="text-3xl font-display font-medium text-white tracking-tight">{value}</h3>
         </div>
-        <div className={`p-3 rounded-2xl bg-white/5 border border-white/5 group-hover:bg-${colorClass}/20 transition-colors`}>
+        <div className={`p-3 rounded-2xl bg-white/5 border border-white/5 group-hover:bg-${colorClass}/10 transition-colors`}>
           <Icon className={`w-5 h-5 text-${colorClass}`} />
         </div>
       </div>
 
       {subtext && (
-        <div className="flex items-center gap-2 mt-auto relative z-10">
+        <div className="flex items-center gap-2 mt-auto relative z-10 pt-4 border-t border-white/5">
           {trend === 'up' && <ArrowUpRight className="w-3 h-3 text-agri-green" />}
           {trend === 'down' && <ArrowDownRight className="w-3 h-3 text-red-400" />}
-          <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-[90%]">{subtext}</p>
+          <p className="text-[10px] text-slate-400 font-medium leading-relaxed max-w-[90%] uppercase tracking-wide">{subtext}</p>
         </div>
       )}
     </div>
@@ -346,7 +354,38 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, isLoading, onReset }
   const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [marketChartType, setMarketChartType] = useState<'line' | 'bar'>('line');
   const [countryStats, setCountryStats] = useState<any>(null);
+
   const [isGlobeRotating, setIsGlobeRotating] = useState(true);
+
+  // Feedback Data State
+  const [userYield, setUserYield] = useState('');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  const handleSaveData = async () => {
+    if (!userYield || isNaN(Number(userYield)) || !data) return;
+    setSaveStatus('saving');
+    // Map inputSummary to SoilData structure
+    const soilData: any = {
+      country: data.inputSummary.country,
+      cropType: data.inputSummary.cropType,
+      temperature: data.inputSummary.temperature,
+      rainfall: data.inputSummary.rainfall,
+      humidity: data.inputSummary.humidity, // Note: Model doesn't strictly use humidity/N/P/K yet but we save what we have
+      nitrogen: data.inputSummary.nitrogen,
+      phosphorus: data.inputSummary.phosphorus,
+      potassium: data.inputSummary.potassium,
+      ph: data.inputSummary.ph,
+      pesticides: data.inputSummary.pesticides
+    };
+
+    const success = await saveTrainingData(soilData, Number(userYield));
+    if (success) {
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } else {
+      setSaveStatus('error');
+    }
+  };
 
   const generateReport = () => {
     if (!data) return;
@@ -764,6 +803,55 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, isLoading, onReset }
           </div>
         </div>
       </div>
+
+      {/* --- Continuous Learning / Data Contribution --- */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="mb-8 p-6 glass-panel rounded-2xl border border-agri-green/20 bg-agri-green/5 relative overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-grid-pattern opacity-10" />
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div>
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <Database className="w-5 h-5 text-agri-green" /> Model Training Loop
+            </h3>
+            <p className="text-sm text-slate-400 mt-1 max-w-xl">
+              Contribute to the "Planetary Prediction" network. If you have ground truth data for this vector, submit it below to automatically retrain the global model.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4 bg-black/40 p-2 rounded-xl border border-white/5">
+            <div className="flex flex-col">
+              <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Actual Yield (Tons/Ha)</label>
+              <input
+                type="number"
+                value={userYield}
+                onChange={(e) => setUserYield(e.target.value)}
+                placeholder="Enter value..."
+                className="bg-transparent text-white font-mono font-bold outline-none w-32 placeholder:text-slate-700"
+              />
+            </div>
+            <button
+              onClick={handleSaveData}
+              disabled={saveStatus === 'saving' || saveStatus === 'saved' || !userYield}
+              className={`px-6 py-3 rounded-lg font-bold text-xs uppercase tracking-wide transition-all shadow-lg flex items-center gap-2 ${saveStatus === 'saved' ? 'bg-green-500 text-black' :
+                saveStatus === 'error' ? 'bg-red-500 text-white' :
+                  'bg-agri-green text-black hover:bg-white'
+                }`}
+            >
+              {saveStatus === 'saving' ? <Loader2 className="w-4 h-4 animate-spin" /> :
+                saveStatus === 'saved' ? <CheckCircle2 className="w-4 h-4" /> :
+                  <Database className="w-4 h-4" />}
+
+              {saveStatus === 'saving' ? 'Processing...' :
+                saveStatus === 'saved' ? 'Model Retrained' :
+                  'Verify & Retrain'}
+            </button>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Simulation Control Bar */}
       <motion.div

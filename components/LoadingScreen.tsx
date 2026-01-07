@@ -181,7 +181,7 @@ export const LoadingScreen = () => {
 
                 {/* Typewriter Text - The Main Feature */}
                 <div className="h-6 flex items-center justify-center">
-                    <TypewriterText text="PLANETARY INTELLIGENCE" />
+                    <TypewriterText text="PLANETARY PREDICTION" />
                 </div>
 
                 {/* Progress Bar */}
