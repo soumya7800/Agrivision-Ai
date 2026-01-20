@@ -10,6 +10,7 @@ export interface SoilData {
   pesticides?: number; // Added for User Dataset Model
   cropType?: string;
   imageBase64?: string;
+  year?: number;
 }
 
 export interface Recommendation {

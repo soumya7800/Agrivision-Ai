@@ -12,7 +12,8 @@ export const DEFAULT_SOIL_DATA = {
   humidity: 82,
   ph: 6.5,
   rainfall: 202,
-  cropType: CropType.Rice
+  cropType: CropType.Rice,
+  year: 2028
 };
 
 export const MAX_VALUES = {
@@ -23,6 +24,29 @@ export const MAX_VALUES = {
   humidity: 100,
   ph: 14,
   rainfall: 300
+};
+
+export const CROP_NUTRIENT_PROFILES: Record<string, {
+  nitrogen: number;
+  phosphorus: number;
+  potassium: number;
+  temperature: number;
+  humidity: number;
+  ph: number;
+  rainfall: number;
+}> = {
+  Rice: { nitrogen: 120, phosphorus: 60, potassium: 60, temperature: 25, humidity: 80, ph: 6.5, rainfall: 250 },
+  Maize: { nitrogen: 140, phosphorus: 70, potassium: 70, temperature: 28, humidity: 65, ph: 7.0, rainfall: 150 },
+  Wheat: { nitrogen: 100, phosphorus: 50, potassium: 50, temperature: 20, humidity: 60, ph: 6.0, rainfall: 120 },
+  Cotton: { nitrogen: 120, phosphorus: 60, potassium: 60, temperature: 30, humidity: 55, ph: 7.5, rainfall: 100 },
+  Coffee: { nitrogen: 110, phosphorus: 55, potassium: 80, temperature: 22, humidity: 85, ph: 6.0, rainfall: 200 },
+  Apple: { nitrogen: 80, phosphorus: 40, potassium: 90, temperature: 15, humidity: 70, ph: 6.5, rainfall: 110 },
+  Banana: { nitrogen: 200, phosphorus: 60, potassium: 250, temperature: 27, humidity: 80, ph: 6.5, rainfall: 220 },
+  Mango: { nitrogen: 100, phosphorus: 50, potassium: 100, temperature: 27, humidity: 60, ph: 6.0, rainfall: 150 },
+  Grapes: { nitrogen: 60, phosphorus: 40, potassium: 80, temperature: 25, humidity: 55, ph: 6.5, rainfall: 80 },
+  Watermelon: { nitrogen: 80, phosphorus: 50, potassium: 80, temperature: 30, humidity: 65, ph: 6.5, rainfall: 90 },
+  Jute: { nitrogen: 80, phosphorus: 40, potassium: 40, temperature: 30, humidity: 85, ph: 7.0, rainfall: 180 },
+  Default: { nitrogen: 100, phosphorus: 50, potassium: 50, temperature: 25, humidity: 70, ph: 6.5, rainfall: 150 }
 };
 
 export const COUNTRIES = [
